@@ -1,5 +1,3 @@
-import json
-
 from app.normalizers.binance_trade import normalize_trade
 from app.streams.topics import Topics
 
@@ -10,18 +8,32 @@ class TradePipeline:
         self.publisher = publisher
         self.logger = logger
 
-    async def process(self, raw_message) -> bool:
 
-        msg = json.loads(raw_message)
+    async def process(self, msg) -> bool:
 
         trade = normalize_trade(msg["data"])
 
-        result = self.validator.validate(trade)
-
-        if not result.valid:
-            self.logger.warning("invalid trade dropped", extra={"trade_id": trade.trade_id, "errors": result.errors})
+        if not await self._validate(trade):
             return False
 
+        if not await self._publish(msg, trade):
+            return False
+
+        return True
+
+
+    async def _validate(self, trade) -> bool:
+        result = self.validator.validate(trade)
+
+        if result.valid: return True
+
+        self.logger.warning(
+            "invalid trade dropped", extra={"trade_id": trade.trade_id, "errors": result.errors}
+        )
+        return False
+
+
+    async def _publish(self, msg, trade) -> bool:
         try:
             await self.publisher.publish(
                 topic=Topics.MARKET_TRADES,
