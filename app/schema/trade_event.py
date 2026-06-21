@@ -13,7 +13,7 @@ class TradeEvent(BaseModel):
     exchange: str
     symbol: str
 
-    trade_id: str
+    trade_id: int
 
     price: Decimal
     quantity: Decimal
