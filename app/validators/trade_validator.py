@@ -1,6 +1,6 @@
 from datetime import timezone, datetime
 
-from app.config import Settings
+from app.config.settings import Settings
 from app.schema.trade_event import TradeEvent
 from app.validators.validation_result import ValidationResult
 
