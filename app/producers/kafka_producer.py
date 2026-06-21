@@ -8,9 +8,13 @@ class KafkaProducer:
         self.bootstrap_servers = bootstrap_servers
         self.producer = None
 
+        def serializer(v):
+            return json.dumps(v, default=str).encode("utf-8")
+        self.serializer = serializer
+
     async def start(self):
         self.producer = AIOKafkaProducer(bootstrap_servers=self.bootstrap_servers,
-                                         value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+                                         value_serializer=self.serializer,
                                          enable_idempotence=True)
         await self.producer.start()
 
