@@ -3,19 +3,19 @@ import json
 import random
 import websockets
 from websockets.exceptions import ConnectionClosed
-from settings import settings
+from app.config import settings
 
 
 class Backoff:
-    def __init__(self, base=1, cap=30):
+    def __init__(self, base: int = settings.backoff_base, cap: int = settings.backoff_cap):
         self.base = base
         self.cap = cap
         self.attempt = 0
         self.last_success = None
 
     def next_delay(self):
-        exp = min(self.cap, self.base * (2 ** self.attempt))
-        jitter = random.uniform(0, exp * 0.2)
+        exp: int = min(self.cap, self.base * (2 ** self.attempt))
+        jitter: float | int= random.uniform(0, exp * 0.2)
         return exp * jitter
     
     def success(self):
@@ -47,8 +47,10 @@ async def consume():
 
             except ConnectionClosed as e:
                 print(f"Connection closed: {e}")
+
             except asyncio.CancelledError:
                 raise
+
             except Exception as e:
                 print(f"Unexpected Error: {e}")
                 backoff.failure()
