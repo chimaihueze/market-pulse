@@ -1,12 +1,13 @@
+from loguru import logger
+
 from app.normalizers.binance_trade import normalize_trade
 from app.streams.topics import Topics
 
 
 class TradePipeline:
-    def __init__(self, validator, publisher, logger):
+    def __init__(self, validator, publisher):
         self.validator = validator
         self.publisher = publisher
-        self.logger = logger
 
 
     async def process(self, msg) -> bool:
@@ -16,7 +17,7 @@ class TradePipeline:
         if not await self._validate(trade):
             return False
 
-        if not await self._publish(msg, trade):
+        if not await self._publish(trade):
             return False
 
         return True
@@ -27,13 +28,13 @@ class TradePipeline:
 
         if result.valid: return True
 
-        self.logger.warning(
+        logger.warning(
             "invalid trade dropped", extra={"trade_id": trade.trade_id, "errors": result.errors}
         )
         return False
 
 
-    async def _publish(self, msg, trade) -> bool:
+    async def _publish(self, trade) -> bool:
         try:
             await self.publisher.publish(
                 topic=Topics.MARKET_TRADES,
@@ -42,7 +43,7 @@ class TradePipeline:
             )
             return True
         except Exception as e:
-            self.logger.error(
+            logger.error(
                 "Failed to publish trade", extra={"trade_id": trade.trade_id, "errors": str(e)}
             )
             return False
