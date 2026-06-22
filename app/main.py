@@ -6,6 +6,7 @@ from app.config.settings import settings
 from app.ingestion.binance_ws_client import BinanceWSClient
 from app.ingestion.consumer import Consumer
 from app.pipelines.pipeline import TradePipeline
+from app.producers.create_topics import create_topics
 from app.producers.kafka_producer import KafkaProducer
 from app.validators.trade_validator import TradeValidator
 from observability.logger import setup_logger
@@ -13,6 +14,8 @@ from observability.logger import setup_logger
 
 async def main():
     logger.info("starting market-pulse")
+
+    await create_topics()
 
     producer = KafkaProducer(settings.kafka_url)
 
