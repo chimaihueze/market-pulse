@@ -2,7 +2,13 @@
 class Settings:
     def __init__(self):
         self.binance_ws_url: str = "wss://stream.binance.com:9443/stream?streams=btcusdt@trade/ethusdt@trade"
+
+        # kafka
         self.kafka_url: str = "localhost:9092"
+        self.kafka_partition_number: int = 3
+        self.kafka_replication_factor: int = 1
+
+        # websocket
         self.ws_ping_interval: int = 20
         self.ws_ping_timeout: int = 20
         self.backoff_base: int = 1
