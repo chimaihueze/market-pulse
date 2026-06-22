@@ -1,6 +1,8 @@
 from loguru import logger
 
 from app.normalizers.binance_trade import normalize_trade
+from app.schema.trade_event import TradeEvent
+from app.shared import Result
 from app.streams.topics import Topics
 
 
@@ -12,38 +14,59 @@ class TradePipeline:
 
     async def process(self, msg) -> bool:
 
-        trade = normalize_trade(msg["data"])
-
-        if not await self._validate(trade):
+        normalized = await self._normalize(msg)
+        if not normalized.ok or normalized.value is None:
             return False
 
-        if not await self._publish(trade):
+        trade = normalized.value
+
+        validated = await self._validate(trade)
+
+        if not validated.ok or validated.value is None:
+            return False
+
+        trade = validated.value
+
+        published = await self._publish(trade)
+        if not published.ok:
             return False
 
         return True
 
+    async def _normalize(self, msg) -> Result[TradeEvent]:
+        try:
+            trade = normalize_trade(msg["data"])
+            return Result.success(trade)
+        except Exception as e:
+            logger.error(
+                "normalize error",
+                extra={"error": str(e), "raw": msg}
+            )
+            return Result.fail(str(e))
 
-    async def _validate(self, trade) -> bool:
+    async def _validate(self, trade: TradeEvent) -> Result[TradeEvent]:
         result = self.validator.validate(trade)
 
-        if result.valid: return True
+        if not result.valid:
+            logger.warning(
+                "invalid trade dropped",
+                extra={"trade_id": trade.trade_id, "errors": result.errors}
+            )
+            return Result.fail("validation failed")
 
-        logger.warning(
-            "invalid trade dropped", extra={"trade_id": trade.trade_id, "errors": result.errors}
-        )
-        return False
+        return Result.success(trade)
 
 
-    async def _publish(self, trade) -> bool:
+    async def _publish(self, trade: TradeEvent) -> Result[TradeEvent]:
         try:
             await self.publisher.publish(
                 topic=Topics.MARKET_TRADES,
                 key=trade.symbol,
                 value=trade.model_dump()
             )
-            return True
+            return Result.success(trade)
         except Exception as e:
             logger.error(
                 "Failed to publish trade", extra={"trade_id": trade.trade_id, "errors": str(e)}
             )
-            return False
+            return Result.fail(str(e))
