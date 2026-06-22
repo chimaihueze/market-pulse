@@ -15,7 +15,11 @@ async def create_topics():
     try:
         await admin.create_topics(
             [
-                NewTopic(name=Topics.MARKET_TRADES, num_partitions=1, replication_factor=1)
+                NewTopic(
+                    name=Topics.MARKET_TRADES,
+                    num_partitions=settings.kafka_partition_number,
+                    replication_factor=settings.kafka_replication_factor
+                )
             ]
         )
     except Exception as e:
