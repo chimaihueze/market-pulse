@@ -2,7 +2,7 @@ from loguru import logger
 
 from app.normalizers.binance_trade import normalize_trade
 from app.schema.trade_event import TradeEvent
-from app.shared import Result
+from app.shared.result import Result
 from app.streams.topics import Topics
 
 
