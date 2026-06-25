@@ -24,7 +24,7 @@ class Backoff:
     def failure(self):
         self.attempt += 1
 
-class Consumer:
+class Worker:
     def __init__(self, ws_client, pipeline):
         self.ws_client = ws_client
         self.pipeline = pipeline

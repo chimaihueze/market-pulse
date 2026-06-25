@@ -8,6 +8,7 @@ from app.ingestion.consumer import Consumer
 from app.pipelines.pipeline import TradePipeline
 from app.producers.create_topics import create_topics
 from app.producers.kafka_producer import KafkaProducer
+from app.ingestion.worker import Worker
 from app.validators.trade_validator import TradeValidator
 from observability.logger import setup_logger
 
@@ -49,13 +50,13 @@ async def main():
         ping_timeout=settings.ws_ping_timeout,
     )
 
-    consumer = Consumer(
+    worker = Worker(
         ws_client=ws_client,
         pipeline=pipeline,
     )
 
     try:
-        await consumer.run()
+        await worker.run()
     finally:
         logger.info("shutting down producer")
         await producer.stop()
