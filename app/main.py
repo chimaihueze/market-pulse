@@ -7,7 +7,7 @@ from app.ingestion.binance_ws_client import BinanceWSClient
 from app.ingestion.worker import Worker
 from app.ingestion.pipeline import TradePipeline
 from app.streaming.admin import create_topics
-from app.streaming.producer import KafkaProducer
+from app.streaming.kafka_producer import KafkaProducer
 from app.validators.trade_validator import TradeValidator
 from observability.logger import setup_logger
 
