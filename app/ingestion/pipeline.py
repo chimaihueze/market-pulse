@@ -3,7 +3,7 @@ from loguru import logger
 from app.normalizers.binance_trade import normalize_trade
 from app.schema.trade_event import TradeEvent
 from app.shared.result import Result
-from app.streams.topics import Topics
+from app.streaming.topics import Topics
 
 
 class TradePipeline:
@@ -14,13 +14,13 @@ class TradePipeline:
 
     async def process(self, msg) -> bool:
 
-        normalized = await self._normalize(msg)
+        normalized = self._normalize(msg)
         if not normalized.ok or normalized.value is None:
             return False
 
         trade = normalized.value
 
-        validated = await self._validate(trade)
+        validated = self._validate(trade)
 
         if not validated.ok or validated.value is None:
             return False
@@ -33,7 +33,7 @@ class TradePipeline:
 
         return True
 
-    async def _normalize(self, msg) -> Result[TradeEvent]:
+    def _normalize(self, msg) -> Result[TradeEvent]:
         try:
             trade = normalize_trade(msg["data"])
             return Result.success(trade)
@@ -44,7 +44,7 @@ class TradePipeline:
             )
             return Result.fail(str(e))
 
-    async def _validate(self, trade: TradeEvent) -> Result[TradeEvent]:
+    def _validate(self, trade: TradeEvent) -> Result[TradeEvent]:
         result = self.validator.validate(trade)
 
         if not result.valid:

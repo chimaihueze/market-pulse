@@ -2,7 +2,7 @@ from aiokafka.admin import AIOKafkaAdminClient, NewTopic
 from loguru import logger
 
 from app.config.settings import settings
-from app.streams.topics import Topics
+from app.streaming.topics import Topics
 
 
 async def create_topics():
