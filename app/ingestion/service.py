@@ -2,7 +2,6 @@ import asyncio
 
 from loguru import logger
 
-from app.core.backoff import Backoff
 from app.core.service import Service
 from app.ingestion.worker import Worker
 from app.streaming.kafka_producer import KafkaProducer
@@ -12,7 +11,6 @@ class IngestionService(Service):
     def __init__(self, producer: KafkaProducer, worker: Worker,):
         self.producer = producer
         self.worker = worker
-        self.backoff = Backoff()
 
     async def start(self):
 
@@ -23,13 +21,10 @@ class IngestionService(Service):
                 await self.producer.start()
                 started = True
                 logger.info("kafka connected")
-                self.backoff.success()
                 break
             except Exception as e:
                 logger.error(f"kafka retry {i}", extra={"error": str(e)})
-                self.backoff.failure()
-                delay = self.backoff.next_delay()
-                await asyncio.sleep(delay)
+                await asyncio.sleep(2 ** i)
 
         if not started:
             logger.critical("kafka unavailable - shutting down service")
