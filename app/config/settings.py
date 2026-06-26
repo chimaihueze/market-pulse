@@ -7,6 +7,7 @@ class Settings:
         self.kafka_url: str = "localhost:9092"
         self.kafka_partition_number: int = 3
         self.kafka_replication_factor: int = 1
+        self.kafka_storage_group_id: str = "storage-service"
 
         # websocket
         self.ws_ping_interval: int = 20
