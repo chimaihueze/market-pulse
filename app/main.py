@@ -3,9 +3,11 @@ import asyncio
 from loguru import logger
 
 from app.config.settings import settings
+from app.core.runner import ServiceRunner
 from app.ingestion.binance_ws_client import BinanceWSClient
-from app.ingestion.worker import Worker
 from app.ingestion.pipeline import TradePipeline
+from app.ingestion.service import IngestionService
+from app.ingestion.worker import Worker
 from app.streaming.admin import create_topics
 from app.streaming.kafka_producer import KafkaProducer
 from app.validators.trade_validator import TradeValidator
@@ -15,28 +17,11 @@ from observability.logger import setup_logger
 async def main():
     logger.info("starting market-pulse")
 
+    validator = TradeValidator(settings)
+
     await create_topics()
 
     producer = KafkaProducer(settings.kafka_url)
-
-    started = False
-
-    for i in range(3):
-        try:
-            await producer.start()
-            started = True
-            logger.info("kafka connected")
-            break
-        except Exception as e:
-            logger.error(f"kafka retry {i}", extra={"error": str(e)})
-            await asyncio.sleep(2 ** i)
-
-    if not started:
-        logger.critical("kafka unavailable - shutting down service")
-        await producer.stop()
-        return
-
-    validator = TradeValidator(settings)
 
     pipeline = TradePipeline(
         validator=validator,
@@ -49,16 +34,15 @@ async def main():
         ping_timeout=settings.ws_ping_timeout,
     )
 
-    worker = Worker(
-        ws_client=ws_client,
-        pipeline=pipeline,
+    worker = Worker(ws_client=ws_client, pipeline=pipeline)
+
+    service = IngestionService(
+        producer=producer,
+        worker=worker,
     )
 
-    try:
-        await worker.run()
-    finally:
-        logger.info("shutting down producer")
-        await producer.stop()
+    runner = ServiceRunner(service)
+    await runner.run()
 
 
 if __name__ == "__main__":
