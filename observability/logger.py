@@ -15,6 +15,8 @@ def setup_logger():
         sys.stdout,
         level="INFO",
         format=log_format,
+        backtrace=False,
+        diagnose=False
     )
 
     logger.add(
