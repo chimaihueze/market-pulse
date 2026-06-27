@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "aiokafka>=0.14.0",
+    "asynch>=0.3.1",
     "loguru>=0.7.3",
     "pydantic>=2.13.4",
     "websockets>=16.0",
