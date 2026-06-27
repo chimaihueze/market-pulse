@@ -19,7 +19,11 @@ async def main():
 
     validator = TradeValidator(settings)
 
-    await create_topics()
+    await create_topics(
+        kafka_url=settings.kafka_url,
+        kafka_partition_number=settings.kafka_partition_number,
+        kafka_replication_factor=settings.kafka_replication_factor
+    )
 
     producer = KafkaProducer(settings.kafka_url)
 
