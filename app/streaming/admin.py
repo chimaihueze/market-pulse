@@ -5,9 +5,9 @@ from app.config.settings import settings
 from app.streaming.topics import Topics
 
 
-async def create_topics():
+async def create_topics(kafka_url, kafka_partition_number, kafka_replication_factor):
     admin = AIOKafkaAdminClient(
-        bootstrap_servers=settings.kafka_url,
+        bootstrap_servers=kafka_url,
     )
 
     await admin.start()
@@ -17,8 +17,8 @@ async def create_topics():
             [
                 NewTopic(
                     name=Topics.MARKET_TRADES,
-                    num_partitions=settings.kafka_partition_number,
-                    replication_factor=settings.kafka_replication_factor
+                    num_partitions=kafka_partition_number,
+                    replication_factor=kafka_replication_factor,
                 )
             ]
         )
