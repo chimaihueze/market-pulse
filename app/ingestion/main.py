@@ -8,28 +8,20 @@ from app.ingestion.binance_ws_client import BinanceWSClient
 from app.ingestion.pipeline import TradePipeline
 from app.ingestion.service import IngestionService
 from app.ingestion.worker import Worker
-from app.streaming.admin import create_topics
 from app.streaming.kafka_producer import KafkaProducer
 from app.validators.trade_validator import TradeValidator
 from observability.logger import setup_logger
 
 
 async def main():
-    logger.info("starting market-pulse")
+    logger.info("starting ingestion service")
 
     validator = TradeValidator(settings)
-
-    await create_topics(
-        kafka_url=settings.kafka_url,
-        kafka_partition_number=settings.kafka_partition_number,
-        kafka_replication_factor=settings.kafka_replication_factor
-    )
-
     producer = KafkaProducer(settings.kafka_url)
 
     pipeline = TradePipeline(
         validator=validator,
-        publisher=producer
+        publisher=producer,
     )
 
     ws_client = BinanceWSClient(
