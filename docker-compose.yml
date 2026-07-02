@@ -54,15 +54,26 @@ services:
       timeout: 5s
       retries: 12
 
-  ingestion:
+  kafka-init:
     build: .
-    container_name: ingestion
-    command: ["uv", "run", "python", "-m", "app.main"]
+    container_name: kafka-init
+    command: ["uv", "run", "python", "-m", "app.streaming.bootstrap"]
     environment:
       KAFKA_URL: kafka:9092
     depends_on:
       kafka:
         condition: service_healthy
+    restart: "no"
+
+  ingestion:
+    build: .
+    container_name: ingestion
+    command: ["uv", "run", "python", "-m", "app.ingestion.main"]
+    environment:
+      KAFKA_URL: kafka:9092
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
       clickhouse:
         condition: service_healthy
 
@@ -78,10 +89,20 @@ services:
       CLICKHOUSE_PASSWORD: admin
       CLICKHOUSE_DATABASE: market_pulse
     depends_on:
-      kafka:
-        condition: service_healthy
+      kafka-init:
+        condition: service_completed_successfully
       clickhouse:
         condition: service_healthy
+
+  analytics:
+    build: .
+    container_name: analytics
+    command: ["uv", "run", "python", "-m", "app.analytics.main"]
+    environment:
+      KAFKA_URL: kafka:9092
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
 
 volumes:
   clickhouse_data:

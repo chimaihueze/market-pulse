@@ -17,6 +17,18 @@ class Settings:
             "KAFKA_STORAGE_GROUP_ID",
             "storage-service",
         )
+        self.kafka_analytics_group_id: str = os.getenv(
+            "KAFKA_ANALYTICS_GROUP_ID",
+            "analytics-service",
+        )
+
+        # analytics
+        self.analytics_window_seconds: int = int(
+            os.getenv("ANALYTICS_WINDOW_SECONDS", "300")
+        )
+        self.analytics_volume_window_seconds: int = int(
+            os.getenv("ANALYTICS_VOLUME_WINDOW_SECONDS", "60")
+        )
 
         # clickhouse
         self.clickhouse_host: str = os.getenv("CLICKHOUSE_HOST", "localhost")

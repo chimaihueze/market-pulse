@@ -18,4 +18,4 @@ RUN groupadd --system app && useradd --system --gid app app && \
 
 USER app
 
-CMD ["uv", "run", "python", "-m", "app.main"]
+CMD ["uv", "run", "python", "-m", "app.ingestion.main"]
